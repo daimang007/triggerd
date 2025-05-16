@@ -1,0 +1,127 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+# trigger:
+# - develop
+
+# pool:
+#   vmImage: ubuntu-latest
+
+# resources:
+#  repositories:
+#    - repository: pimsRepository
+#      type: git
+#      name: npims/pims-frontend
+#      ref: develop
+#      endpoint: pipeline-repo-npims
+
+# stages:
+#   - stage:
+#     displayName: "build stage"
+#     jobs:
+#       - job: Build
+#         displayName: Build
+#         steps:
+#           - checkout: pimsRepository
+#           - script: |
+#               echo Add other tasks to build, test, and deploy your project.
+#               echo See https://aka.ms/yaml
+#             displayName: 'Run a multi-line script'
+
+trigger:
+  branches:
+    include:
+    - trigger-history
+  paths:
+    include:
+    - trigger_logs_dev/*
+
+pool:
+  name: self-hosted-pool
+
+# steps:
+# - script: echo "트리거가 실행되었습니다!"
+#   displayName: '트리거 실행 확인'
+  
+# # 여기에 필요한 작업을 추가하세요
+# - script: |
+#     echo "trigger-logs-dev 폴더에 변경 사항이 감지되었습니다."
+#     # 추가 작업을 이곳에 작성할 수 있습니다.
+#   displayName: '변경 사항 처리'
+
+
+resources:
+  repositories:
+    - repository: pimsRepository
+      type: git
+      name: npims/pims-frontend
+      ref: develop
+      endpoint: pipeline-repo-npims
+      # trigger:
+      #   branches:
+      #     include:
+      #       - develop
+      #   paths:
+      #     include:
+      #       - apps/devis/**
+
+stages:
+  - stage: Build
+    displayName: "build stage"
+    jobs:
+      - job: Build
+        displayName: "Build"
+        steps:
+          - checkout: pimsRepository
+          - script: |
+              echo "NEXT_PUBLIC_SERVER_URL=$(NEXT_PUBLIC_SERVER_URL)" >> $(Build.SourcesDirectory)/apps/devis/.env
+              echo "NEXT_PUBLIC_PIMS_SERVER_URL=$(NEXT_PUBLIC_PIMS_SERVER_URL)" >> $(Build.SourcesDirectory)/apps/devis/.env
+              echo "NODE_ENV=$(NODE_ENV)" >> $(Build.SourcesDirectory)/apps/devis/.env
+              echo "TURBO_TELEMETRY_DISABLE=$(TURBO_TELEMETRY_DISABLE)" >> $(Build.SourcesDirectory)/apps/devis/.env
+              echo "DO_NOT_TRACK=$(DO_NOT_TRACK)" >> $(Build.SourcesDirectory)/apps/devis/.env
+            displayName: ".env setting"
+          - task: Docker@2
+            inputs:
+              containerRegistry: skcc-aidev-dev-acr
+              repository: devis-frontend
+              command: buildAndPush
+              Dockerfile: apps/devis/Dockerfile
+              buildContext: $(Build.SourcesDirectory)
+              tags: $(Build.BuildId)
+            displayName: "Build and Push Docker image to ACR"
+          - upload: apps/devis/manifests/dev
+            artifact: apps/devis/manifests/dev
+            
+  - stage: Deploy
+    displayName: Deploy stage
+    dependsOn: Build
+    jobs:
+      - deployment: Delpoy
+        displayName: "Deploy"
+        environment: "dev.hypernova"
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: KubernetesManifest@1
+                  displayName: "Create imagePullSecret"
+                  inputs:
+                    action: createSecret
+                    connectionType: kubernetesServiceConnection
+                    namespace: hypernova
+                    secretType: dockerRegistry
+                    secretName: devis-frontend
+                    dockerRegistryEndpoint: skcc-aidev-dev-acr
+                - task: KubernetesManifest@1
+                  displayName: "Deploy to Kubernetes cluster"
+                  inputs:
+                    action: deploy
+                    connectionType: kubernetesServiceConnection
+                    namespace: hypernova
+                    manifests: |
+                      $(Pipeline.Workspace)/apps/devis/manifests/dev/deployment.yaml
+                      $(Pipeline.Workspace)/apps/devis/manifests/dev/service.yaml
+                    containers: hypernovadevacr.azurecr.io/devis-frontend:$(Build.BuildId)
+                    imagePullSecrets: devis-frontend

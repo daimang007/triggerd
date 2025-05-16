@@ -1,0 +1,134 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+# trigger:
+# - develop
+
+# pool:
+#   vmImage: ubuntu-latest
+
+# resources:
+#  repositories:
+#    - repository: pimsRepository
+#      type: git
+#      name: npims/pims-frontend
+#      ref: develop
+#      endpoint: pipeline-repo-npims
+
+# stages:
+#   - stage:
+#     displayName: "build stage"
+#     jobs:
+#       - job: Build
+#         displayName: Build
+#         steps:
+#           - checkout: pimsRepository
+#           - script: |
+#               echo Add other tasks to build, test, and deploy your project.
+#               echo See https://aka.ms/yaml
+#             displayName: 'Run a multi-line script'
+
+trigger:
+  branches:
+    include:
+    - trigger-history
+  paths:
+    include:
+    - trigger_logs_prd/*
+
+pool:
+  name: self-hosted-pool2
+
+# steps:
+# - script: echo "트리거가 실행되었습니다!"
+#   displayName: '트리거 실행 확인'
+  
+# 여기에 필요한 작업을 추가하세요
+# - script: |
+#     echo "trigger_logs_prd 폴더에 변경 사항이 감지되었습니다."
+#     # 추가 작업을 이곳에 작성할 수 있습니다.
+#   displayName: '변경 사항 처리'
+
+# 운영(release) npims/pims-frontend/apps/devis 배포
+
+resources:
+ repositories:
+   - repository: pimsRepository
+     type: git
+     name: npims/pims-frontend
+     ref: davis/release
+     endpoint: pipeline-repo-npims
+    # NPIMS 저장소의 변경에 반응하도록 트리거 설정
+    #  trigger:
+    #    branches:
+    #      include:
+    #        - main  # NPIMS의 main 브랜치 변경에 트리거
+    #    paths:
+    #      include:
+    #        - apps/devis/**  # NPIMS 저장소의 이 경로에 변경이 있을 때만 트리거
+
+stages:
+  - stage: Build
+    displayName: "build stage"
+    jobs:
+      - job: Build
+        displayName: "Build"
+        steps:
+          - checkout: pimsRepository
+          - script: |
+              echo "NEXT_PUBLIC_SERVER_URL=$(NEXT_PUBLIC_SERVER_URL)" >> $(Build.SourcesDirectory)/apps/devis/.env
+              echo "NEXT_PUBLIC_PIMS_SERVER_URL=$(NEXT_PUBLIC_PIMS_SERVER_URL)" >> $(Build.SourcesDirectory)/apps/devis/.env
+              echo "NEXT_PUBLIC_MENU_DISABLE_ADN=$(NEXT_PUBLIC_MENU_DISABLE_ADN)" >> $(Build.SourcesDirectory)/apps/devis/.env
+              echo "NEXT_PUBLIC_MENU_DISABLE_ANY=$(NEXT_PUBLIC_MENU_DISABLE_ANY)" >> $(Build.SourcesDirectory)/apps/devis/.env
+              echo "NEXT_PUBLIC_MENU_DISABLE_PRJ=$(NEXT_PUBLIC_MENU_DISABLE_PRJ)" >> $(Build.SourcesDirectory)/apps/devis/.env
+              echo "NEXT_PUBLIC_MENU_DISABLE_REQ=$(NEXT_PUBLIC_MENU_DISABLE_REQ)" >> $(Build.SourcesDirectory)/apps/devis/.env
+              echo "NEXT_PUBLIC_MENU_DISABLE_TEST=$(NEXT_PUBLIC_MENU_DISABLE_TEST)" >> $(Build.SourcesDirectory)/apps/devis/.env
+              echo "NODE_ENV=$(NODE_ENV)" >> $(Build.SourcesDirectory)/apps/devis/.env
+              echo "TURBO_TELEMETRY_DISABLE=$(TURBO_TELEMETRY_DISABLE)" >> $(Build.SourcesDirectory)/apps/devis/.env
+              echo "DO_NOT_TRACK=$(DO_NOT_TRACK)" >> $(Build.SourcesDirectory)/apps/devis/.env
+            displayName: ".env setting"
+          - task: Docker@2
+            inputs:
+              containerRegistry: skcc-aidev-prd-acr
+              repository: devis-frontend
+              command: buildAndPush
+              Dockerfile: apps/devis/Dockerfile
+              buildContext: $(Build.SourcesDirectory)
+              tags: $(Build.BuildId)
+            displayName: "Build and Push Docker image to ACR"
+          - upload: apps/devis/manifests/prod
+            artifact: apps/devis/manifests/prod
+            
+  - stage: Deploy
+    displayName: Deploy stage
+    dependsOn: Build
+    jobs:
+      - deployment: Delpoy
+        displayName: "Deploy"
+        environment: "prd.hypernova"
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: KubernetesManifest@1
+                  displayName: "Create imagePullSecret"
+                  inputs:
+                    action: createSecret
+                    connectionType: kubernetesServiceConnection
+                    namespace: hypernova
+                    secretType: dockerRegistry
+                    secretName: devis-frontend
+                    dockerRegistryEndpoint: skcc-aidev-prd-acr
+                - task: KubernetesManifest@1
+                  displayName: "Deploy to Kubernetes cluster"
+                  inputs:
+                    action: deploy
+                    connectionType: kubernetesServiceConnection
+                    namespace: hypernova
+                    manifests: |
+                      $(Pipeline.Workspace)/apps/devis/manifests/prod/deployment.yaml
+                      $(Pipeline.Workspace)/apps/devis/manifests/prod/service.yaml
+                    containers: hypernovaprdacr.azurecr.io/devis-frontend:$(Build.BuildId)
+                    imagePullSecrets: devis-frontend

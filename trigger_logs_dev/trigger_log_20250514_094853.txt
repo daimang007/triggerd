@@ -1,0 +1,3 @@
+Triggered by: Merged PR 4717: Update : [RS] 사용자 화면 오타수정, 초기값 수정
+Timestamp: 2025-05-14 09:48:53
+Commit Hash: 6d68996951990c1147d3b6eead866907096942c7

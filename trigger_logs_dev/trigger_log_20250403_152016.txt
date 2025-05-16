@@ -1,0 +1,3 @@
+Triggered by: Merged PR 3903: Featch:[채팅] 매타정보 오류, 히스토리 오류, 타인 답변 접근시 main화면으로 redirect 하도록 개발
+Timestamp: 2025-04-03 15:20:16
+Commit Hash: 590aee7ad2750ec8e9d2dc2ddde5d71dc777e236

@@ -1,0 +1,3 @@
+Triggered by: Merged PR 4681: Update:[RS] styleDisable 조건 수정, getCategoryJobNodeParsing 조건 수정
+Timestamp: 2025-05-12 16:57:22
+Commit Hash: 95e29eab6fa05cb1442daff4045a3fa3940426de

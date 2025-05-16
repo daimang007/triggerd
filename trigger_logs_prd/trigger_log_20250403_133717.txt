@@ -1,0 +1,3 @@
+Triggered by: Merged PR 3889: Update:[문서 보관한] 문서 보관함 전체선택 오동작 수정
+Timestamp: 2025-04-03 13:37:17
+Commit Hash: dcdf63213cc416e1ed2c7cfcb3d6b21a11d32231

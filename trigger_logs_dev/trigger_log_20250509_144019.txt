@@ -1,0 +1,3 @@
+Triggered by: Merged PR 4630: [DQ-172] [공통] 메인화면 상단배너 비율조정
+Timestamp: 2025-05-09 14:40:19
+Commit Hash: 8d15785c1a762848f589fc79656bcab33d031fb0

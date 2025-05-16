@@ -1,0 +1,3 @@
+Triggered by: DAVIS FEATURE: 응답 출력방식 변경 - citation 한꺼번에 표기
+Timestamp: 2025-03-31 13:54:15
+Commit Hash: 8e5d042baf8c74ee019637ba6c01014f849a16bc

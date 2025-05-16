@@ -1,0 +1,3 @@
+Triggered by: Merged PR 4661: Feat:[RS RS사용자 화면 오류 case 개발
+Timestamp: 2025-05-12 11:15:36
+Commit Hash: dcb62d9a2cdf31be4b5ed39817ced78ebd51b57d

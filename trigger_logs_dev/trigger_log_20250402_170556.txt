@@ -1,0 +1,3 @@
+Triggered by: Merged PR 3870: Update:[채팅] 화면 진입시 bottom이동
+Timestamp: 2025-04-02 17:05:56
+Commit Hash: 4f3be0028f05018cde6af2c131f6a33cb14ca693

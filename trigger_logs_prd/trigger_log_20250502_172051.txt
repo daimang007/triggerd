@@ -1,0 +1,3 @@
+Triggered by: [DAVIS] design helper 질문등록 버튼 활성화
+Timestamp: 2025-05-02 17:20:51
+Commit Hash: 0749a759a2e0129ae1e399cb74d2e92d205b5230

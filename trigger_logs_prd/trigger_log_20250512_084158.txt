@@ -1,0 +1,3 @@
+Triggered by: Merged PR 4646: Update: [WeeklyHeadwayRate] 다음주의 차이, 달성률 컬럼 삭제
+Timestamp: 2025-05-12 08:41:58
+Commit Hash: f9f6aa89626f7404f46fdf079272e6cd4023ab22

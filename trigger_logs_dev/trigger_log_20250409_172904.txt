@@ -1,0 +1,3 @@
+Triggered by: Merged PR 4046: Feat:[AI 사전세팅] 기준문서, 업무분류 단계 개발
+Timestamp: 2025-04-09 17:29:04
+Commit Hash: a5e8ac389fe33e7fc2969241c3e906c8c925dc87

@@ -1,0 +1,3 @@
+Triggered by: Merged PR 4592: Feat:[RS] RS 사용자, 설정 화면 개발
+Timestamp: 2025-05-08 17:37:59
+Commit Hash: 160d14d3025bfe463007f2904d48af39eef1b587

@@ -1,0 +1,3 @@
+Triggered by: Merged PR 3867: Update:[QA] 용어 수정 (DEVIS-Design → DAVIS Design)
+Timestamp: 2025-04-02 16:55:09
+Commit Hash: c9d1191897cc412907ce01671d329267cd1dc65e

@@ -1,0 +1,3 @@
+Triggered by: Merged PR 4191: Update:[히스토리] AD 모듈명 수정 등
+Timestamp: 2025-04-15 17:56:13
+Commit Hash: e6d040c6d4e264bac19b8a64f2982c9c1da1c4e0
